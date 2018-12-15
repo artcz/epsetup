@@ -1,0 +1,11 @@
+---
+
+- name: Install python3
+  become: yes
+  become_method: sudo
+  apt:
+      update_cache: yes
+      name: "{{ packages }}"
+  vars:
+      packages:
+          - python3
