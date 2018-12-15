@@ -1,0 +1,4 @@
+---
+
+- name: append timestamp to ~/timestamps file
+  shell: date >> ~/timestamps

@@ -1,0 +1,9 @@
+---
+
+- name: Provision Testbox
+  hosts: testbox
+  user: ubuntu
+  become: True
+  become_method: sudo
+  roles:
+    - basic_role
