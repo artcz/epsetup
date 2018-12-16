@@ -1,5 +1,6 @@
 ---
 
+deploy_path: /home/ubuntu/deploy/
 gunicorn_based_projects:
     - helpdesk
     - ep2015
@@ -7,3 +8,4 @@ gunicorn_based_projects:
     - ep2017
     - ep2018
     - epstage
+
