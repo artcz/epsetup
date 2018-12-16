@@ -5,4 +5,5 @@
   user: ubuntu
   roles:
     - basic_role
-    - install_python
+    - install_packages
+    - ep19

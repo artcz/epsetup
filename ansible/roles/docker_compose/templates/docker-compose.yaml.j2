@@ -1,0 +1,168 @@
+version: '3'
+
+services:
+
+{% for app in gunicorn_based_projects %}
+    {{ app }}:
+        restart: always
+        build: dockerfile/{{ app }}/
+        expose:
+            - "80"
+        volumes:
+            # TODO: remove src
+            - {{ app }}_src:/usr/src/{{ app }}/
+            - {{ app }}_data:/usr/src/{{ app }}/data
+            - {{ app }}_static:/usr/src/{{ app }}/static
+            # TODO: helpdesk has media, and epcons has media public and private
+            - {{ app }}_media:/usr/src/{{ app }}/media
+            - {{ app }}_media_public:/usr/src/{{ app }}/data/media_public
+            - {{ app }}_media_private:/usr/src/{{ app }}/data/media_private
+            # TODO: ep2017 and 2018 also have ticket search apps
+            # - ep2018_ticket_app:/usr/src/ep2018/ep-ticket-search-app
+            # - ep2018_social_ticket_app:/usr/src/ep2018/ep-social-ticket-search-app
+        env_file:
+            - /home/ubuntu/envfiles/{{ app }}.env
+        command: gunicorn {{ app }}.wsgi:application --bind 0.0.0.0:80 --workers 4
+{% endfor %}
+
+    wiki:
+        restart: always
+        build: dockerfile/wiki/
+        expose:
+            - "80"
+        volumes:
+            - wiki_src:/usr/src/wiki
+            - ./config/wiki/conf:/usr/src/wiki/conf:ro
+            - wiki_config:/usr/src/wiki/trac/europython/conf
+            - wiki_data:/usr/src/wiki/trac/europython/db
+            - wiki_htdocs:/usr/src/wiki/trac/europython/htdocs
+            - wiki_files:/usr/src/wiki/trac/europython/files
+        env_file:
+            - env_files/wiki_env
+        command:
+            bin/tracd
+                --port=80
+                --hostname=0.0.0.0
+                --basic-auth=europython,/usr/src/wiki/conf/user.auth,"EuroPython Conference"
+                --pidfile=/usr/src/wiki/var/tracd.pid
+                /usr/src/wiki/trac/europython
+
+    ### Web server
+ 
+    nginx:
+        restart: always
+        image: nginx
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./config/nginx/conf.d:/etc/nginx/conf.d:ro
+            - ./config/nginx/ssl:/etc/nginx/ssl:ro
+            - ./config/nginx/.htpasswd:/etc/nginx/.htpasswd:ro
+            - letsencrypt_challenge:/home/letsencrypt/acme-challenge
+            - letsencrypt_certs:/home/letsencrypt/certs
+            - nginx_log:/var/log/nginx
+            - nginx_www_root:/usr/share/nginx/html
+            - ep2015_media_public:/usr/src/ep2015/data/media_public
+            - ep2015_media_private:/usr/src/ep2015/data/media_private
+            - ep2015_data_static:/usr/src/ep2015/data/static
+            - ep2016_media_public:/usr/src/ep2016/data/media_public
+            - ep2016_media_private:/usr/src/ep2016/data/media_private
+            - ep2016_data_static:/usr/src/ep2016/data/static
+            - ep2017_media_public:/usr/src/ep2017/data/media_public
+            - ep2017_media_private:/usr/src/ep2017/data/media_private
+            - ep2017_data_static:/usr/src/ep2017/data/static
+            - ep2017_ticket_app:/usr/src/ep2017/ep-ticket-search-app
+            - ep2017_social_ticket_app:/usr/src/ep2017/ep-social-ticket-search-app
+            - ep2018_media_public:/usr/src/ep2018/data/media_public
+            - ep2018_media_private:/usr/src/ep2018/data/media_private
+            - ep2018_data_static:/usr/src/ep2018/data/static
+            - ep2018_ticket_app:/usr/src/ep2018/ep-ticket-search-app
+            - ep2018_social_ticket_app:/usr/src/ep2018/ep-social-ticket-search-app
+            - epstage_media_public:/usr/src/epstage/data/media_public
+            - epstage_media_private:/usr/src/epstage/data/media_private
+            - epstage_data_static:/usr/src/epstage/data/static
+            - epstage_ticket_app:/usr/src/epstage/ep-ticket-search-app
+            - epstage_social_ticket_app:/usr/src/epstage/ep-social-ticket-search-app
+            - wiki_htdocs:/usr/src/wiki/htdocs
+            - helpdesk_media:/usr/src/helpdesk/media
+            - helpdesk_static:/usr/src/helpdesk/static
+        links:
+            {% for app in gunicorn_based_projects %}
+            - {{ app }}
+            {% endfor %}{# app in gunicorn_based_projects #}
+            - wiki
+            - helpdesk
+
+    letsencrypt:
+        build: dockerfile/letsencrypt/
+        volumes:
+            - letsencrypt_data:/home/letsencrypt
+            - letsencrypt_challenge:/home/letsencrypt/acme-challenge
+            - letsencrypt_certs:/home/letsencrypt/certs
+            - ./config/letsencrypt:/etc/letsencrypt:ro
+        env_file:
+            - env_files/letsencrypt
+
+    ###
+
+    mail:
+        restart: always
+        image: tvial/docker-mailserver:2.1
+        hostname: mail
+        domainname: europython.io
+        ports:
+            - "25:25"
+            - "143:143"
+            - "587:587"
+            - "993:993"
+        volumes:
+            - mail_data:/var/mail
+            - mail_state:/var/mail-state
+            - ./config/mail:/tmp/docker-mailserver
+            - /var/lib/docker/volumes/webarch_letsencrypt_certs/_data:/tmp/ssl:ro
+            - /etc/localtime:/etc/localtime:ro
+        env_file:
+            - env_files/mail_env
+        cap_add:
+            - NET_ADMIN
+
+volumes:
+
+    ### Let's Encrypt
+
+    letsencrypt_challenge: ~
+    letsencrypt_certs: ~
+    letsencrypt_data: ~
+
+    ### nginx
+
+    nginx_log: ~
+    nginx_www_root: ~
+
+    {% for app in gunicorn_based_projects %}
+    {{ app }}_src: ~
+    {{ app }}_data: ~
+    {{ app }}_static: ~
+    {{ app }}_media: ~
+    {{ app }}_media_public: ~
+    {{ app }}_media_private: ~
+    {% endfor %}
+
+    ### EuroPython Wiki
+
+    wiki_src: ~
+    wiki_config: ~
+    wiki_data: ~
+    wiki_files: ~
+    wiki_htdocs: ~
+
+    ### Errbot
+
+    errbot_src: ~
+    errbot_data: ~
+
+    ### Mail server
+
+    mail_data: ~
+    mail_state: ~

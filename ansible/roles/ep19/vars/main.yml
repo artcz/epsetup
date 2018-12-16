@@ -1,0 +1,9 @@
+---
+
+ep19_repository_url: https://github.com/EuroPython/epcon/
+ep19_code_deploy_path: /home/ubuntu/deploy/ep19/code/
+ep19_docker_deploy_path: /home/ubuntu/deploy/ep19/docker/
+ep19_code_deploy_path_in_docker: /usr/src/ep19/
+ep19_deploy_branch: dev/ep2019
+ep19_env_path: /home/ubuntu/deploy/envs/ep19.env
+

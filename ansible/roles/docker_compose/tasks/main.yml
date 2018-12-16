@@ -1,0 +1,9 @@
+---
+
+- name: Set up docker-compose
+  template:
+      src: docker-compose.yml.j2
+      dest: "{{ ep19_docker_deploy_path }}/docker-compose.yaml"
+      owner: ubuntu
+      group: ubuntu
+      mode: 0644

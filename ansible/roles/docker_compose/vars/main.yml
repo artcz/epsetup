@@ -1,0 +1,9 @@
+---
+
+gunicorn_based_projects:
+    - helpdesk
+    - ep2015
+    - ep2016
+    - ep2017
+    - ep2018
+    - epstage

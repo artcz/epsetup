@@ -1,6 +1,6 @@
 ---
 
-- name: Install python3
+- name: Install required packages
   become: yes
   become_method: sudo
   apt:
@@ -9,3 +9,6 @@
   vars:
       packages:
           - python3
+          - nginx
+          - docker
+          - docker-compose
